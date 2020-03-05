@@ -4,9 +4,9 @@ CFLAGS=-c -o -lm -mavx -mavx2 -Wall
 all: test_environment
 
 test_environment: main.o test_env.o calc.o recover.o basic_operators.o table_values.o
-	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -o test_environment
+	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -lm -o test_environment
 
-main.o: main.c
+main.o: main.c 
 	$(CC) $(CFLAGS) main.c
 
 test_env.o: test_env.c
