@@ -1,5 +1,5 @@
 #!/bin/sh
-make
+make -f Makefile.txt
 echo -e
 ./test_environment
 echo -e
