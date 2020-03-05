@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint-gcc.h>
 #include <string.h>
+#include <malloc.h>
 #include "test_env.h"
 #define GF_2_8_module 0x71
 

@@ -5,14 +5,14 @@
 #include "recover.h"
 #include <math.h>
 
-#define size_of_disk 32 //4096 // в 4 Кб 4096 байт, 32768 бит
+#define size_of_disk 1024 //4096 // в 4 Кб 4096 байт, 32768 бит
 #define size_of_disk_for_m256i (size_of_disk / 32)
 
 int compare_double(const void* x1, const void* x2);
 
 int bin_search(const unsigned int number_of_experiments, const double speed[number_of_experiments], double key);
 
-double find_confidence_interval(const unsigned int number_of_experiments, double speed[number_of_experiments]);
+double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double * speed);
 
 void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag);
 

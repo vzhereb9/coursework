@@ -15,6 +15,7 @@ __m256i multiplication_by_X_vector(__m256i a)
     a = _mm256_slli_epi16(a, 1);
     a = _mm256_and_si256(a, _mm256_set1_epi8(0xFE));
     a = _mm256_xor_si256(a, mask);
+    return a;
 }
 
 uint8_t multiply_A_by_B_classic(uint8_t a, uint8_t b)

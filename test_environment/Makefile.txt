@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -o -lm -mavx -mavx2 -Wall
+CFLAGS=-c -Iinclude -lm -mavx -mavx2 -Wall -o
 
 all: test_environment
 
@@ -10,7 +10,7 @@ main.o: main.c
 	$(CC) $(CFLAGS) main.c
 
 test_env.o: test_env.c
-	$(CC) $(CFLAGS) test_env.c -lm
+	$(CC) $(CFLAGS) test_env.c
 
 calc.o: calc.c
 	$(CC) $(CFLAGS) calc.c
@@ -23,6 +23,3 @@ basic_operators.o: basic_operators.c
 
 table_values.o: table_values.c
 	$(CC) $(CFLAGS) table_values.c
-
-
-

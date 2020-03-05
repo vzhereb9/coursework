@@ -70,6 +70,7 @@ clock_t recover_vector(uint8_t** raid, unsigned int number_of_disks, unsigned in
             if (stripe_for_check[j] != raid[i][j])
             {
                 printf("Recovery function does not work properly\n");
+                break;
             }
         }
     }
@@ -179,7 +180,7 @@ void recover_one_stripe_vector(__m256i* const stripe, unsigned int number_of_dis
 {
     __m256i* new_syndromes;
     // new_syndromes для хранения старых значений P Q
-    new_syndromes = (__m256i*) malloc(size_of_disk_for_m256i * 2 * sizeof(__m256i));
+    new_syndromes = (__m256i*) memalign(32, size_of_disk_for_m256i * 2 * sizeof(__m256i));
     __m256i* p_da = stripe + a * size_of_disk_for_m256i;
     __m256i* p_db = stripe + b * size_of_disk_for_m256i;
     __m256i* p_p = stripe + number_of_disks * size_of_disk_for_m256i;

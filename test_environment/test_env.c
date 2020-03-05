@@ -23,7 +23,7 @@ int bin_search(const unsigned int number_of_experiments, const double speed[numb
     return (int) r;
 }
 
-double find_confidence_interval(const unsigned int number_of_experiments, double speed[number_of_experiments])
+double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double * speed)
 {
     // сортировка массива
     qsort(speed, number_of_experiments, sizeof(double), compare_double);
@@ -66,17 +66,17 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
     //memset(speed_calc_for_each_number_of_drives,0,sizeof(double)*number_of_experiments);
     //memset(speed_recover_for_each_number_of_drives,0,sizeof(double)*number_of_experiments);
 
-    for (int r = 4; r <= 4; r = r + 4)
+    for (int r = 4; r <= 64; r = r + 4)
     {
         uint8_t** raid = NULL;
         unsigned int i, j, number_of_stripes = 1, number_of_disks = r;
         // заполнение number_of_stripes штук страйпов, каждый страйп занимает по size_of_disk * (number_of_disks +2).
         // это реализовано как двумерный массив
-        raid = (uint8_t**) malloc((number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
+        raid = (uint8_t**) memalign(32, (number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
         for (i = 0; i < number_of_stripes; i++)
         {
             // выделение места для каждого страйпа
-            raid[i] = (uint8_t*) malloc(size_of_disk * (number_of_disks + 2) * sizeof(uint8_t)); //sizeof(uint8_t) = 1
+            raid[i] = (uint8_t*) memalign(32, size_of_disk * (number_of_disks + 2) * sizeof(uint8_t)); //sizeof(uint8_t) = 1
         }
 
         // эксперимент запускается number_of_experiments раз и записывается скорость выполнения каждого эксперимента для calc и recover (КБ/с) в массив
@@ -158,9 +158,9 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
         }
         free(raid);
 
-        avg_speed_calc[(r / 4) - 1] = find_confidence_interval(number_of_experiments,
-                                                               speed_calc_for_each_number_of_drives);
-        avg_speed_recover[(r / 4) - 1] = find_confidence_interval(number_of_experiments,
-                                                                  speed_recover_for_each_number_of_drives);
+        avg_speed_calc[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
+                                                                         speed_calc_for_each_number_of_drives);
+        avg_speed_recover[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
+                                                                            speed_recover_for_each_number_of_drives);
     }
 }

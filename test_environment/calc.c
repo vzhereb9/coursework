@@ -83,7 +83,7 @@ void calc_one_stripe_vector(__m256i* const stripe, unsigned int number_of_disks)
     {
         *(p_p + i % size_of_disk_for_m256i) = _mm256_xor_si256(*(p_p + i % size_of_disk_for_m256i), *(stripe + i));
         //_mm256_storeu_si256((p_p + i % size_of_disk_for_m256i), _mm256_xor_si256(*(p_p + i % size_of_disk_for_m256i),
-                                                                                 //*(stripe + i)));
+        //*(stripe + i)));
     }
     //print_stripe(p_p, 0);
 
@@ -99,12 +99,12 @@ void calc_one_stripe_vector(__m256i* const stripe, unsigned int number_of_disks)
         // Умножение текущей ячейки Q на x
         *(p_q + i % size_of_disk_for_m256i) = multiplication_by_X_vector(*(p_q + i % size_of_disk_for_m256i));
         //_mm256_storeu_si256((p_q + i % size_of_disk_for_m256i),
-                           // multiplication_by_X_vector(*(p_q + i % size_of_disk_for_m256i)));
+        // multiplication_by_X_vector(*(p_q + i % size_of_disk_for_m256i)));
         // Прибаление к текущей ячейке Q значение соотвествующей ячейки блока D(i+1)
         *(p_q + i % size_of_disk_for_m256i) = _mm256_xor_si256(*(p_q + i % size_of_disk_for_m256i),
-        *(stripe + (size_of_disk / 32) + i));
+                                                               *(stripe + (size_of_disk / 32) + i));
         //_mm256_storeu_si256((p_q + i % size_of_disk_for_m256i), _mm256_xor_si256(*(p_q + i % size_of_disk_for_m256i),
-                                                                                 //*(stripe + (size_of_disk / 32) + i)));
+        //*(stripe + (size_of_disk / 32) + i)));
     }
     //print_stripe(p_p, 0);
     p_q = NULL;
