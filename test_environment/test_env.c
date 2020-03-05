@@ -1,95 +1,166 @@
 #include "test_env.h"
 
-int compare(const void *x1, const void *x2)   // функция сравнения элементов массива
+// функция сравнения элементов массива
+int compare_double(const void* x1, const void* x2)
 {
-    return (*(int *) x1 - *(int *) x2); // если результат вычитания равен 0, то числа равны, < 0: x1 < x2; > 0: x1 > x2
+    // если результат вычитания равен 0, то числа равны, < 0: x1 < x2; > 0: x1 > x2
+    return (*(double*) x1 - *(double*) x2);
 }
 
-double run_test_env()
+int bin_search(const unsigned int number_of_experiments, const double speed[number_of_experiments], double key)
 {
-    //число экспериментов, для которых запускаем тест. Число дисков от 4 до 64
-    const unsigned int number_of_experiments = 1024;
-    //массив скоростей обработки данных для каждого эксперимента
-    double speed[number_of_experiments];
-    //запускаем эксперимент number_of_experiments раз и записываем скорость выполнения эксперимента (КБ/с) в массив
-    for (int i = 0; i < number_of_experiments; i++)
+    long long l = -1;
+    long long r = number_of_experiments;
+    long long m = 0;
+    while (l < r - 1)
     {
-        //число дисков от 4 до 64
-        speed[i] = speed_of_one_check(i % 61 + 4);
+        m = (l + r) / 2;
+        if (speed[m] < key)
+            l = m;
+        else
+            r = m;
     }
+    return (int) r;
+}
 
-    //сортируем массив
-    qsort(speed, number_of_experiments, sizeof(double), compare);
+double find_confidence_interval(const unsigned int number_of_experiments, double speed[number_of_experiments])
+{
+    // сортировка массива
+    qsort(speed, number_of_experiments, sizeof(double), compare_double);
+
+    double med = 0.0;
+    double arithmetic_mean = 0.0;
+    double const_for_arithmetic_mean = 1.0 / number_of_experiments;
+    double variance = 0.0;
+    double const_for_variance = 1.0 / (number_of_experiments - 1);
+    if (number_of_experiments % 2 == 1)
+        med = speed[number_of_experiments / 2];
+    else
+        med = 0.5 * (speed[number_of_experiments / 2 - 1] + speed[number_of_experiments / 2]);
+    for (int i = 0; i < number_of_experiments; i++)
+        arithmetic_mean += const_for_arithmetic_mean * speed[i];
+    for (int i = 0; i < number_of_experiments; i++)
+        variance += const_for_variance * (speed[i] - arithmetic_mean) * (speed[i] - arithmetic_mean);
+    double standard_deviation = sqrt(variance);
 
     double avg_speed = 0.0;
-    //выбираем 5% экспериментов, чтобы не учитывать их при более оптимальном подсчете средней скорости выполнения
-    unsigned int number_of_unnecessary_experiments = number_of_experiments / 20;
+    double confidence_interval_min = med - standard_deviation;
+    double confidence_interval_max = med + standard_deviation;
 
-    //подсчитываем среднюю скорость выполнения (KБ/с)
-    for (unsigned int i = number_of_unnecessary_experiments;
-         i < number_of_experiments - number_of_unnecessary_experiments; i++)
-    {
-        avg_speed += speed[i];
-    }
-    avg_speed /= (number_of_experiments - 2 * number_of_unnecessary_experiments);
+    int index_confidence_interval_min = bin_search(number_of_experiments, speed, confidence_interval_min);
+    int index_confidence_interval_max = bin_search(number_of_experiments, speed, confidence_interval_max);
+    double const_for_avg_speed = 1.0 / (index_confidence_interval_max - index_confidence_interval_min);
+    for (int i = index_confidence_interval_min; i < index_confidence_interval_max; i++)
+        avg_speed += const_for_avg_speed * speed[i];
+
     return avg_speed;
 }
 
-double speed_of_one_check(unsigned int number_of_disks)
+void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag)
 {
-    byte **raid = NULL;
-    unsigned int i, j;
-    clock_t time;
+    // число экспериментов, для которых запускаем тест.
+    const unsigned int number_of_experiments = 100; // Вообще расчитано на 1024
+    // массив скоростей обработки данных для каждого количества дисков (4, 8, ... , 64)
+    double speed_calc_for_each_number_of_drives[number_of_experiments];
+    double speed_recover_for_each_number_of_drives[number_of_experiments];
+    //memset(speed_calc_for_each_number_of_drives,0,sizeof(double)*number_of_experiments);
+    //memset(speed_recover_for_each_number_of_drives,0,sizeof(double)*number_of_experiments);
 
-    //заполнили number_of_disks штук дисков по 4Кб (4096 Б) каждый, реализовали это как двумерный массив
-    raid = (byte **) malloc((number_of_disks + 2) * sizeof(byte *)); //доп 2 дисковых массива для P Q
-    for (i = 0; i < number_of_disks + 2; i++)
+    for (int r = 4; r <= 4; r = r + 4)
     {
-        raid[i] = (byte *) malloc(size_of_disk * sizeof(byte));
-    }
-
-    //byte* p = raid[number_of_disks];
-    //byte* q = raid[number_of_disks + 1];
-
-    //заполнили этот массив случайными значениями
-    for (i = 0; i < number_of_disks; i++)
-    {
-        for (j = 0; j < size_of_disk; j++)
+        uint8_t** raid = NULL;
+        unsigned int i, j, number_of_stripes = 1, number_of_disks = r;
+        // заполнение number_of_stripes штук страйпов, каждый страйп занимает по size_of_disk * (number_of_disks +2).
+        // это реализовано как двумерный массив
+        raid = (uint8_t**) malloc((number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
+        for (i = 0; i < number_of_stripes; i++)
         {
-            raid[i][j] = rand() % 255;
+            // выделение места для каждого страйпа
+            raid[i] = (uint8_t*) malloc(size_of_disk * (number_of_disks + 2) * sizeof(uint8_t)); //sizeof(uint8_t) = 1
         }
-    }
 
-    time = clock();
-
-    //выполняем подсчет контрольных сумм
-    calc(raid, number_of_disks);
-
-    //вычислили затраченное время, затраченное процессором на выполнение программы
-    time = clock() - time;
-
-    //очищаем память
-    for (i = 0; i < number_of_disks + 2; i++)
-    {
-        free(raid[i]);
-    }
-    free(raid);
-
-    //возвращаем скорость в KБ/с текущего эксперимента
-    //time / (double) CLOCKS_PER_SEC возвращает количество единиц значения времени в одной секунде
-    //size_of_disk * number_of_disks - общий размер всех дисков, над которыми проводим эксперимент
-    //делим на 1024, т.к. получили результат в байтах, а хотим в КБ
-    return ((size_of_disk * number_of_disks) / (time / (double) CLOCKS_PER_SEC)) / 1024;
-}
-
-void calc(byte **raid, unsigned int number_of_disks)
-{
-    //просто подсчитываем сумму всех элементов и записываем ее в P, Q пока никак не изменяем
-    for (unsigned int j = 0; j < size_of_disk; j++)
-    {
-        for (unsigned int i = 0; i < number_of_disks; i++)
+        // эксперимент запускается number_of_experiments раз и записывается скорость выполнения каждого эксперимента для calc и recover (КБ/с) в массив
+        for (int k = 0; k < number_of_experiments; k++)
         {
-            raid[number_of_disks][j] += raid[i][j];
+            clock_t time_calc = 0;
+            clock_t time_recover = 0;
+
+            // заполнение каждого блока D[0] - D[number_of_disks - 1] случайными значениями
+            for (i = 0; i < number_of_stripes; i++)
+            {
+                for (j = 0; j < size_of_disk * (number_of_disks); j++)
+                {
+                    raid[i][j] = rand() % 255;
+                }
+            }
+
+            switch (flag)
+            {
+                case 0:
+                {
+                    // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
+                    time_calc = calc_classic(raid, number_of_disks, number_of_stripes);
+
+                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    unsigned int a = rand() % b;
+
+                    // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
+                    time_recover = recover_classic(raid, number_of_disks, number_of_stripes, a, b);
+                    break;
+                }
+                case 1:
+                {
+                    // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
+                    time_calc = calc_vector(raid, number_of_disks, number_of_stripes);
+
+                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    unsigned int a = rand() % b;
+
+                    // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
+                    time_recover = recover_vector(raid, number_of_disks, number_of_stripes, a, b);
+                    break;
+                }
+                case 2:
+                {
+                    // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
+                    time_calc = calc_RAIDIX(raid, number_of_disks, number_of_stripes);
+
+                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    unsigned int a = rand() % b;
+
+                    // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
+                    time_recover = recover_RAIDIX(raid, number_of_disks, number_of_stripes, a, b);
+                    break;
+                }
+                default:
+                {
+                    printf("Enter the wrong number");
+                    break;
+                }
+            }
+
+            // возвращение скорости в KБ/с текущего эксперимента
+            //   time / (double) CLOCKS_PER_SEC возвращает количество единиц значения времени в одной секунде
+            //   size_of_disk * number_of_disks * number_of_stripes - общий размер всего рейда, над которым проводится эксперимент
+            //   деление  на 1024, т.к. получен результат в байтах, а нужно в KБ
+            speed_calc_for_each_number_of_drives[k] =
+                    ((size_of_disk / 1024.0) * number_of_disks * number_of_stripes) /
+                    ((time_calc) / (double) CLOCKS_PER_SEC);
+            speed_recover_for_each_number_of_drives[k] =
+                    ((size_of_disk / 1024.0) * number_of_disks * number_of_stripes) /
+                    ((time_recover) / (double) CLOCKS_PER_SEC);
         }
+
+        // очистка памяти
+        for (i = 0; i < number_of_stripes; i++)
+        {
+            free(raid[i]);
+        }
+        free(raid);
+
+        avg_speed_calc[(r / 4) - 1] = find_confidence_interval(number_of_experiments,
+                                                               speed_calc_for_each_number_of_drives);
+        avg_speed_recover[(r / 4) - 1] = find_confidence_interval(number_of_experiments,
+                                                                  speed_recover_for_each_number_of_drives);
     }
 }
