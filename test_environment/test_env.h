@@ -5,8 +5,8 @@
 #include "recover.h"
 #include <math.h>
 
-#define size_of_disk 1024 //4096 // в 4 Кб 4096 байт, 32768 бит
-#define size_of_disk_for_m256i (size_of_disk / 32)
+#define size_of_strip 1024 //4096 // в 4 Кб 4096 байт, 32768 бит
+#define size_of_strip_for_m256i (size_of_strip / 32)
 
 int compare_double(const void* x1, const void* x2);
 

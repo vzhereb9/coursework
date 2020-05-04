@@ -12,25 +12,25 @@ const uint8_t second_table[65] = {0x1, 0xB8, 0x5C, 0x2E, 0x17, 0xB3, 0xE1, 0xC8,
                                   0x14, 0xA, 0x5, 0xBA, 0x5D, 0x96, 0x4B, 0x9D, 0xF6, 0x7B, 0x85, 0xFA, 0x7D, 0x86, 0x43,
                                   0x99, 0xF4, 0x7A, 0x3D}; // values x^(a-N+1)
 
-       /*for (j = 0; j < size_of_disk; j++)
+       /*for (j = 0; j < size_of_strip; j++)
             {
                 raid[0][j] = 0x05;
             }
-            for (j = 0; j < size_of_disk; j++)
+            for (j = 0; j < size_of_strip; j++)
             {
-                raid[0][j + size_of_disk] = 0x04;
+                raid[0][j + size_of_strip] = 0x04;
             }
-            for (j = 0; j < size_of_disk; j++)
+            for (j = 0; j < size_of_strip; j++)
             {
-                raid[0][j+ 2 *size_of_disk] = 0x03;
+                raid[0][j+ 2 *size_of_strip] = 0x03;
             }
-            for (j = 0; j < size_of_disk; j++)
+            for (j = 0; j < size_of_strip; j++)
             {
-                raid[0][j+ 3 * size_of_disk] = 0x02;
+                raid[0][j+ 3 * size_of_strip] = 0x02;
             }
-            for (j = 0; j < size_of_disk; j++)
+            for (j = 0; j < size_of_strip; j++)
             {
-                raid[0][j+ 4 * size_of_disk] = 0x01;
+                raid[0][j+ 4 * size_of_strip] = 0x01;
             }*/
 
 /*void find_1_div_1_min_x_pow_a_min_b(uint8_t first_table[65], uint8_t second_table[65])
@@ -39,7 +39,7 @@ const uint8_t second_table[65] = {0x1, 0xB8, 0x5C, 0x2E, 0x17, 0xB3, 0xE1, 0xC8,
     first_table[0] = 1;
     second_table[0] = 1;
     for (int i = 0; i < 254; i++)
-        x_pow_254 = multiplication_by_X_classic(x_pow_254);
+        x_pow_254 = multiply_by_X_classic(x_pow_254);
     for (int i = 1; i < 65; i++)
     {
         first_table[i] = multiplication_A_by_B(first_table[i - 1],x_pow_254);

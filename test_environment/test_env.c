@@ -23,7 +23,7 @@ int bin_search(const unsigned int number_of_experiments, const double speed[numb
     return (int) r;
 }
 
-double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double * speed)
+double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double* speed)
 {
     // сортировка массива
     qsort(speed, number_of_experiments, sizeof(double), compare_double);
@@ -59,7 +59,7 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
 void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag)
 {
     // число экспериментов, для которых запускаем тест.
-    const unsigned int number_of_experiments = 100; // Вообще расчитано на 1024
+    const unsigned int number_of_experiments = 10; // Вообще расчитано на 1024
     // массив скоростей обработки данных для каждого количества дисков (4, 8, ... , 64)
     double speed_calc_for_each_number_of_drives[number_of_experiments];
     double speed_recover_for_each_number_of_drives[number_of_experiments];
@@ -68,29 +68,32 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
 
     for (int r = 4; r <= 64; r = r + 4)
     {
+        unsigned int number_of_stripes = 1, number_of_strips = r;
         uint8_t** raid = NULL;
-        unsigned int i, j, number_of_stripes = 1, number_of_disks = r;
-        // заполнение number_of_stripes штук страйпов, каждый страйп занимает по size_of_disk * (number_of_disks +2).
+        // заполнение number_of_stripes штук страйпов, каждый страйп занимает по size_of_strip * (number_of_strips +2).
         // это реализовано как двумерный массив
         raid = (uint8_t**) memalign(32, (number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
-        for (i = 0; i < number_of_stripes; i++)
+        for (unsigned int i = 0; i < number_of_stripes; i++)
         {
             // выделение места для каждого страйпа
-            raid[i] = (uint8_t*) memalign(32, size_of_disk * (number_of_disks + 2) * sizeof(uint8_t)); //sizeof(uint8_t) = 1
+            raid[i] = (uint8_t*) memalign(32, size_of_strip * (number_of_strips + 2) *
+                                              sizeof(uint8_t)); //sizeof(uint8_t) = 1
         }
 
-        // эксперимент запускается number_of_experiments раз и записывается скорость выполнения каждого эксперимента для calc и recover (КБ/с) в массив
-        for (int k = 0; k < number_of_experiments; k++)
-        {
-            clock_t time_calc = 0;
-            clock_t time_recover = 0;
 
-            // заполнение каждого блока D[0] - D[number_of_disks - 1] случайными значениями
-            for (i = 0; i < number_of_stripes; i++)
+        // эксперимент запускается number_of_experiments раз и записывается скорость выполнения каждого эксперимента для calc и recover (MB/s) в массив
+        for (unsigned int l = 0; l < number_of_experiments; l++)
+        {
+            uint64_t time_calc = 0;
+            uint64_t time_recover = 0;
+
+            // заполнение каждого блока D[0] - D[number_of_strips - 1] случайными значениями
+            for (unsigned int i = 0; i < number_of_stripes; i++)
             {
-                for (j = 0; j < size_of_disk * (number_of_disks); j++)
+                for (unsigned int j = 0; j < size_of_strip * (number_of_strips); j++)
                 {
                     raid[i][j] = rand() % 255;
+                    //raid[i][j] = 0x1;
                 }
             }
 
@@ -99,37 +102,94 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
                 case 0:
                 {
                     // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
-                    time_calc = calc_classic(raid, number_of_disks, number_of_stripes);
+                    time_calc = calc_classic(raid, number_of_strips, number_of_stripes);
 
-                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    unsigned int b = rand() % (number_of_strips - 1) + 1;
                     unsigned int a = rand() % b;
 
                     // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
-                    time_recover = recover_classic(raid, number_of_disks, number_of_stripes, a, b);
+                    time_recover = recover_classic(raid, number_of_strips, number_of_stripes, a, b);
                     break;
                 }
                 case 1:
                 {
                     // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
-                    time_calc = calc_vector(raid, number_of_disks, number_of_stripes);
+                    time_calc = calc_vector(raid, number_of_strips, number_of_stripes);
 
-                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    unsigned int b = rand() % (number_of_strips - 1) + 1;
                     unsigned int a = rand() % b;
 
                     // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
-                    time_recover = recover_vector(raid, number_of_disks, number_of_stripes, a, b);
+                    time_recover = recover_vector(raid, number_of_strips, number_of_stripes, a, b);
                     break;
                 }
                 case 2:
                 {
-                    // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
-                    time_calc = calc_RAIDIX(raid, number_of_disks, number_of_stripes);
+                    uint8_t** raid_new = NULL;
+                    raid_new = (uint8_t**) memalign(32, (number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
+                    for (unsigned int i = 0; i < number_of_stripes; i++)
+                    {
+                        // выделение места для каждого страйпа
+                        raid_new[i] = (uint8_t*) memalign(32, size_of_strip * (number_of_strips + 2) *
+                                                              sizeof(uint8_t)); //sizeof(uint8_t) = 1
+                    }
+                    // Изменяем расположение битов
+                    //clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
+                    uint8_t bit;
+                    for (unsigned int k = 0; k < number_of_stripes; k++)
+                    {
+                        for (unsigned int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
+                        {
+                            raid_new[k][i] = 0x0;
+                            for (int j = 7; j >= 0; j--)
+                            {
+                                bit = ((raid[k])[i] >> j) & 0x1;
+                                (raid_new[k])[(7 - j) * 32 + (i % 256) / 8 + (i / 256) * 256] ^= bit << (7 - (i % 8));
+                                //(raid_new[k])[(7 - j) * 32 + (i / 8)] ^= bit << (7 - (i % 8));
+                            }
+                        }
+                    }
 
-                    unsigned int b = rand() % (number_of_disks - 1) + 1;
+                    // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
+                    time_calc = calc_RAIDIX(raid_new, number_of_strips, number_of_stripes);
+
+                    unsigned int b = rand() % (number_of_strips - 1) + 1;
                     unsigned int a = rand() % b;
 
                     // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
-                    time_recover = recover_RAIDIX(raid, number_of_disks, number_of_stripes, a, b);
+                    time_recover = recover_RAIDIX(raid_new, number_of_strips, number_of_stripes, a, b);
+
+                    // Изменение расположения битов на изначальное
+                    for (unsigned int k = 0; k < number_of_stripes; k++)
+                    {
+                        for (unsigned int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
+                        {
+                            (raid[k])[i] = 0x0;
+                        }
+                    }
+
+                    for (unsigned int k = 0; k < number_of_stripes; k++)
+                    {
+                        for (unsigned int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
+                        {
+                            for (int j = 7; j >= 0; j--)
+                            {
+                                bit = ((raid_new[k])[i] >> j) & 0x1;
+                                (raid[k])[(7 - j) + (i % 32) * 8 + (i / 256) * 256] ^= bit << (7 - ((i % 256) / 32));
+                                //(raid[k])[(7 - j) + (i % 32) * 8] ^= bit << (7 - (i / 32));
+                            }
+                        }
+                    }
+
+                    //clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
+                    //time_ns = diff_ns(time1, time2);
+
+                    for (unsigned int i = 0; i < number_of_stripes; i++)
+                    {
+                        free(raid_new[i]);
+                    }
+                    free(raid_new);
+
                     break;
                 }
                 default:
@@ -140,19 +200,16 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
             }
 
             // возвращение скорости в KБ/с текущего эксперимента
-            //   time / (double) CLOCKS_PER_SEC возвращает количество единиц значения времени в одной секунде
-            //   size_of_disk * number_of_disks * number_of_stripes - общий размер всего рейда, над которым проводится эксперимент
-            //   деление  на 1024, т.к. получен результат в байтах, а нужно в KБ
-            speed_calc_for_each_number_of_drives[k] =
-                    ((size_of_disk / 1024.0) * number_of_disks * number_of_stripes) /
-                    ((time_calc) / (double) CLOCKS_PER_SEC);
-            speed_recover_for_each_number_of_drives[k] =
-                    ((size_of_disk / 1024.0) * number_of_disks * number_of_stripes) /
-                    ((time_recover) / (double) CLOCKS_PER_SEC);
+            speed_calc_for_each_number_of_drives[l] =
+                    ((size_of_strip / (1024.0 * 1024.0)) * number_of_strips * number_of_stripes) /
+                    (time_calc / 1000000000.0);
+            speed_recover_for_each_number_of_drives[l] =
+                    ((size_of_strip / (1024.0 * 1024.0)) * number_of_strips * number_of_stripes) /
+                    (time_recover / 1000000000.0);
         }
 
         // очистка памяти
-        for (i = 0; i < number_of_stripes; i++)
+        for (unsigned int i = 0; i < number_of_stripes; i++)
         {
             free(raid[i]);
         }
