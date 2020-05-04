@@ -199,7 +199,7 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
                 }
             }
 
-            // возвращение скорости в KБ/с текущего эксперимента
+            // возвращение скорости в MБ/с текущего эксперимента
             speed_calc_for_each_number_of_drives[l] =
                     ((size_of_strip / (1024.0 * 1024.0)) * number_of_strips * number_of_stripes) /
                     (time_calc / 1000000000.0);
