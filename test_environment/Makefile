@@ -1,10 +1,10 @@
 CC=gcc
 CFLAGS= -mavx -mavx2 -Wall -c
 
-all: coursework
+all: coursework_AVX
 
-coursework: main.o test_env.o calc.o recover.o basic_operators.o table_values.o
-	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -lm -o coursework
+coursework_AVX: main.o test_env.o calc.o recover.o basic_operators.o table_values.o
+	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -lm -o coursework_AVX
 
 main.o: main.c 
 	$(CC) $(CFLAGS) main.c

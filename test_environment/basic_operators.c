@@ -57,18 +57,6 @@ __m256i multiply_A_by_B_vector(__m256i a, uint8_t b)
         b = b >> 1;
     }
     return sum;
-    /*for (unsigned int i = 0; i < 8; i++)
-    {
-        mask = _mm256_set1_epi8(0x01);
-        mask = _mm256_and_si256(mask, b);
-        mask = _mm256_cmpgt_epi8(mask, _mm256_setzero_si256());
-        mask = _mm256_and_si256(mask, a);
-        sum = _mm256_xor_si256(sum, mask);
-        a = multiply_by_X_vector(a);
-        b = _mm256_srli_epi16(b, 0x01);
-        mask = _mm256_set1_epi8(0x7F)x ;
-        b = _mm256_and_si256(b, mask);
-    }*/
 }
 
 void multiply_A_by_B_RAIDIX(__m256i* a, uint8_t b, __m256i* sum)
@@ -105,12 +93,6 @@ uint64_t diff_ns(struct timespec start, struct timespec end)
 
     return diff.tv_sec * 1000000000 + diff.tv_nsec;
 }
-
-/*void print256_num(__m256i var)
-{
-    int64_t *v64val = (int64_t*) &var;
-    printf("%.16llx %.16llx %.16llx %.16llx\n", v64val[3], v64val[2], v64val[1], v64val[0]);
-}*/
 
 void print_stripe(uint8_t* const stripe, unsigned int number_of_disks)
 {

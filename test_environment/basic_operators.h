@@ -26,8 +26,6 @@ void multiply_A_by_B_RAIDIX(__m256i* a, uint8_t b, __m256i* sum);
 //return difference in ns
 uint64_t diff_ns(struct timespec start, struct timespec end);
 
-//void print256_num(__m256i var);
-
 void print_stripe(uint8_t* const stripe, unsigned int number_of_strips);
 
 #endif //TESTC_BASIC_OPERATORS_H

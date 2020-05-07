@@ -6,7 +6,6 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
 
-
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) (uint8_t*) memalign(32,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
@@ -94,16 +93,6 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) (uint8_t*) memalign(32,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
-    /*uint8_t** raid_new = NULL;
-    raid_new = (uint8_t**) memalign(32, (number_of_stripes) * sizeof(uint8_t*)); //доп 2 дисковых массива для P Q
-    for (int i = 0; i < number_of_stripes; i++)
-    {
-        // выделение места для каждого страйпа
-        raid_new[i] = (uint8_t*) memalign(32,
-                                          size_of_strip * (number_of_strips + 2) * sizeof(uint8_t)); //sizeof(uint8_t) = 1
-    }
-
-    uint8_t bit;*/
     for (unsigned int k = 0; k < number_of_stripes; k++)
     {
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -117,39 +106,11 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
             (raid_new[k])[b * size_of_strip + j] = 0x0;
         }
 
-        /*//clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
-        // Изменяем расположение битов
-        for (int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
-        {
-            for (int j = 7; j >= 0; j--)
-            {
-                bit = ((raid[k])[i] >> j) & 0x1;
-                (raid_new[k])[(7 - j) * 32 + (i % 256) / 8 + (i / 256) * 256] ^= bit << (7 - (i % 8));
-                //(raid_new[k])[(7 - j) * 32 + (i / 8)] ^= bit << (7 - (i % 8));
-            }
-        }*/
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
         recover_one_stripe_RAIDIX((__m256i*) raid_new[k], number_of_strips, a, b);
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
-        /*// Изменение расположения битов на изначальное
-        for (int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
-        {
-            (raid[k])[i] = 0x0;
-        }
 
-        for (int i = 0; i < size_of_strip * (number_of_strips + 2); i++)
-        {
-            for (int j = 7; j >= 0; j--)
-            {
-                bit = ((raid_new[k])[i] >> j) & 0x1;
-                (raid[k])[(7 - j) + (i % 32) * 8 + (i / 256) * 256] ^= bit << (7 - ((i % 256) / 32));
-                //(raid[k])[(7 - j) + (i % 32) * 8] ^= bit << (7 - (i / 32));
-            }
-        }
-
-        //clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
-        //time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);*/
         // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
@@ -162,11 +123,6 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
 
     free(stripe_for_check);
     stripe_for_check = NULL;
-    /*for (int i = 0; i < number_of_stripes; i++)
-    {
-        free(raid_new[i]);
-    }
-    free(raid_new);*/
 
     return time_recover;
 }
@@ -344,5 +300,4 @@ void recover_one_stripe_RAIDIX(__m256i* const stripe_new, unsigned int number_of
     new_syndromes = NULL;
     free(numerator);
     numerator = NULL;
-
 }
