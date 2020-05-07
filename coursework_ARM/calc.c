@@ -39,28 +39,28 @@ void calc_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strip
     uint8_t* p_p = stripe + number_of_strips * size_of_strip;
     uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-    // Обнуление P
+    // РћР±РЅСѓР»РµРЅРёРµ P
     for (unsigned int i = 0; i < size_of_strip; i++)
     {
         p_p[i] ^= p_p[i];
     }
-    // Вычисление P
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ P
     for (unsigned int i = 0; i < number_of_strips * size_of_strip; i++)
     {
         p_p[i % size_of_strip] ^= stripe[i];
     }
 
-    // Q присваивается значение первого блока D0
+    // Q РїСЂРёСЃРІР°РёРІР°РµС‚СЃСЏ Р·РЅР°С‡РµРЅРёРµ РїРµСЂРІРѕРіРѕ Р±Р»РѕРєР° D0
     for (unsigned int i = 0; i < size_of_strip; i++)
     {
         p_q[i] = stripe[i];
     }
-    // Вычисление Q
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Q
     for (unsigned int i = 0; i < (number_of_strips - 1) * size_of_strip; i++)
     {
-    	// Умножение текущей ячейки Q на x
+    	// РЈРјРЅРѕР¶РµРЅРёРµ С‚РµРєСѓС‰РµР№ СЏС‡РµР№РєРё Q РЅР° x
         p_q[i % size_of_strip] = multiply_by_X_classic(p_q[i % size_of_strip]);
-        // Прибавление к текущей ячейке Q значение соотвествующей ячейки блока D(i+1)
+        // РџСЂРёР±Р°РІР»РµРЅРёРµ Рє С‚РµРєСѓС‰РµР№ СЏС‡РµР№РєРµ Q Р·РЅР°С‡РµРЅРёРµ СЃРѕРѕС‚РІРµСЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРё Р±Р»РѕРєР° D(i+1)
         p_q[i % size_of_strip] ^= stripe[size_of_strip + i];
 
     }
@@ -75,28 +75,28 @@ void calc_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_strips
 	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
 	uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-	// Обнуление P
+	// РћР±РЅСѓР»РµРЅРёРµ P
 	for (unsigned int i = 0; i < size_of_strip; i += 16)
 	{
 		vst1q_u8(p_p + i, vmovq_n_u8(0));
 	}
-    // Вычисление P
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ P
     for (unsigned int i = 0; i < number_of_strips * size_of_strip; i += 16)
     {
     	vst1q_u8(p_p + (i % size_of_strip), veorq_u8(vld1q_u8(p_p + (i % size_of_strip)), vld1q_u8(stripe + i)));
     }
 
-    // Q присваивается значение первого блока D0
+    // Q РїСЂРёСЃРІР°РёРІР°РµС‚СЃСЏ Р·РЅР°С‡РµРЅРёРµ РїРµСЂРІРѕРіРѕ Р±Р»РѕРєР° D0
     for (unsigned int i = 0; i < size_of_strip; i += 16)
     {
     	vst1q_u8(p_q + i, vld1q_u8(stripe + i));
     }
-    // Вычисление Q
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Q
     for (unsigned int i = 0; i < (number_of_strips - 1) * size_of_strip; i += 16)
     {
-    	// Умножение текущей ячейки Q на x
+    	// РЈРјРЅРѕР¶РµРЅРёРµ С‚РµРєСѓС‰РµР№ СЏС‡РµР№РєРё Q РЅР° x
     	vst1q_u8(p_q + (i % size_of_strip), multiply_by_X_vector(vld1q_u8(p_q + (i % size_of_strip))));
-    	// Прибаление к текущей ячейке Q значение соотвествующей ячейки блока D(i+1)
+    	// РџСЂРёР±Р°Р»РµРЅРёРµ Рє С‚РµРєСѓС‰РµР№ СЏС‡РµР№РєРµ Q Р·РЅР°С‡РµРЅРёРµ СЃРѕРѕС‚РІРµСЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРё Р±Р»РѕРєР° D(i+1)
     	vst1q_u8(p_q + (i % size_of_strip), veorq_u8(vld1q_u8(p_q + (i % size_of_strip)), vld1q_u8(stripe + size_of_strip + i)));
     }
     p_q = NULL;
@@ -108,23 +108,23 @@ void calc_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_strips
 	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
 	uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-	// Обнуление P
+	// РћР±РЅСѓР»РµРЅРёРµ P
     for (unsigned int i = 0; i < size_of_strip; i += 16)
     {
     	vst1q_u8(p_p + i, vmovq_n_u8(0));
     }
-    // Вычисление P
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ P
     for (unsigned int i = 0; i < number_of_strips * size_of_strip; i += 16)
     {
     	vst1q_u8(p_p + (i % size_of_strip), veorq_u8(vld1q_u8(p_p + (i % size_of_strip)), vld1q_u8(stripe + i)));
     }
 
-    // Q присваивается значение первого блока D0
+    // Q РїСЂРёСЃРІР°РёРІР°РµС‚СЃСЏ Р·РЅР°С‡РµРЅРёРµ РїРµСЂРІРѕРіРѕ Р±Р»РѕРєР° D0
     for (unsigned int i = 0; i < size_of_strip; i += 16)
     {
     	vst1q_u8(p_q + i, vld1q_u8(stripe + i));
     }
-    // Вычисление Q
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Q
     for (int k = 0; k < size_of_strip / 128; k++)
     {
     	for (int i = 1; i < number_of_strips; i++)
