@@ -1,9 +1,9 @@
 #include "test_env.h"
 
-// функция сравнения элементов массива
+// С„СѓРЅРєС†РёСЏ СЃСЂР°РІРЅРµРЅРёСЏ СЌР»РµРјРµРЅС‚РѕРІ РјР°СЃСЃРёРІР°
 int compare_double(const void* x1, const void* x2)
 {
-    // если результат вычитания равен 0, то числа равны, < 0: x1 < x2; > 0: x1 > x2
+    // РµСЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚ РІС‹С‡РёС‚Р°РЅРёСЏ СЂР°РІРµРЅ 0, С‚Рѕ С‡РёСЃР»Р° СЂР°РІРЅС‹, < 0: x1 < x2; > 0: x1 > x2
     return (*(double*) x1 - *(double*) x2);
 }
 
@@ -57,9 +57,9 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
 
 void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag)
 {
-    // число экспериментов, для которых запускаем тест.
+    // С‡РёСЃР»Рѕ СЌРєСЃРїРµСЂРёРјРµРЅС‚РѕРІ, РґР»СЏ РєРѕС‚РѕСЂС‹С… Р·Р°РїСѓСЃРєР°РµРј С‚РµСЃС‚.
     const unsigned int number_of_experiments = 10; // 1024
-    // массив скоростей обработки данных для каждого количества дисков (4, 8, ... , 64)
+    // РјР°СЃСЃРёРІ СЃРєРѕСЂРѕСЃС‚РµР№ РѕР±СЂР°Р±РѕС‚РєРё РґР°РЅРЅС‹С… РґР»СЏ РєР°Р¶РґРѕРіРѕ РєРѕР»РёС‡РµСЃС‚РІР° РґРёСЃРєРѕРІ (4, 8, ... , 64)
     double speed_calc_for_each_number_of_drives[number_of_experiments];
     double speed_recover_for_each_number_of_drives[number_of_experiments];
 
@@ -116,7 +116,7 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
                     unsigned int b = rand() % (number_of_strips - 1) + 1;
                     unsigned int a = rand() % b;
 
-                    // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
+                    // РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ 2С… РґРёСЃРєРѕРІ Рё РІС‹С‡РёСЃР»РµРЅРёРµ РІСЂРµРјРµРЅРё, Р·Р° РєРѕС‚РѕСЂРѕРµ РїСЂРѕРёСЃС…РѕРґРёС‚ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ
                     time_recover = ((double)recover_RAIDIX(raid, number_of_strips, number_of_stripes, a, b)) / CLOCKS_PER_SEC;
                     break;
                 }
