@@ -58,7 +58,7 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
 void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag)
 {
     // число экспериментов, для которых запускаем тест.
-    const unsigned int number_of_experiments = 10; // 1024
+    const unsigned int number_of_experiments = 1024; // 1024
     // массив скоростей обработки данных для каждого количества дисков (4, 8, ... , 64)
     double speed_calc_for_each_number_of_drives[number_of_experiments];
     double speed_recover_for_each_number_of_drives[number_of_experiments];
