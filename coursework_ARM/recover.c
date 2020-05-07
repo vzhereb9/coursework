@@ -26,7 +26,7 @@ clock_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned 
         recover_one_stripe_classic(raid[i], number_of_strips, a, b);
         time_recover += clock() - time_recover_one_stripe;
 
-        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        // РџСЂРѕРІРµСЂРєР° РїСЂР°РІРёР»СЊРЅРѕСЃС‚Рё СЂР°Р±РѕС‚С‹ РїСЂРѕРіСЂР°РјРјС‹ (СЃСЂР°РІРЅРµРЅРёРµ СЃС‚СЂР°Р№РїРѕРІ РґРѕ Рё РїРѕСЃР»Рµ РІС‹Р·РѕРІР° С„СѓРЅРєС†РёРё)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
             if (stripe_for_check[j] != raid[i][j])
@@ -67,7 +67,7 @@ clock_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned i
         recover_one_stripe_vector(raid[i], number_of_strips, a, b);
         time_recover += clock() - time_recover_one_stripe;
 
-        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        // РџСЂРѕРІРµСЂРєР° РїСЂР°РІРёР»СЊРЅРѕСЃС‚Рё СЂР°Р±РѕС‚С‹ РїСЂРѕРіСЂР°РјРјС‹ (СЃСЂР°РІРЅРµРЅРёРµ СЃС‚СЂР°Р№РїРѕРІ РґРѕ Рё РїРѕСЃР»Рµ РІС‹Р·РѕРІР° С„СѓРЅРєС†РёРё)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
             if (stripe_for_check[j] != raid[i][j])
@@ -108,7 +108,7 @@ clock_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned i
         recover_one_stripe_RAIDIX(raid[i], number_of_strips, a, b);
         time_recover += clock() - time_recover_one_stripe;
 
-        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        // РџСЂРѕРІРµСЂРєР° РїСЂР°РІРёР»СЊРЅРѕСЃС‚Рё СЂР°Р±РѕС‚С‹ РїСЂРѕРіСЂР°РјРјС‹ (СЃСЂР°РІРЅРµРЅРёРµ СЃС‚СЂР°Р№РїРѕРІ РґРѕ Рё РїРѕСЃР»Рµ РІС‹Р·РѕРІР° С„СѓРЅРєС†РёРё)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
             if (stripe_for_check[j] != raid[i][j])
@@ -126,7 +126,7 @@ clock_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned i
 
 void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
 {
-	// new_syndromes для хранения старых значений P Q
+	// new_syndromes РґР»СЏ С…СЂР°РЅРµРЅРёСЏ СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Q
     uint8_t* new_syndromes;
     new_syndromes = (uint8_t*) malloc(size_of_strip * 2 * sizeof(uint8_t));
     uint8_t* p_da = stripe + a * size_of_strip;
@@ -134,7 +134,7 @@ void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_st
     uint8_t* p_p = stripe + number_of_strips * size_of_strip;
     uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-    // Обнуление Da и Db и занесение в new_syndromes старых значений P и Q
+    // РћР±РЅСѓР»РµРЅРёРµ Da Рё Db Рё Р·Р°РЅРµСЃРµРЅРёРµ РІ new_syndromes СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Рё Q
     for (int i = 0; i < size_of_strip; i++)
     {
         p_da[i] ^= p_da[i];
@@ -145,14 +145,14 @@ void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_st
 
     calc_one_stripe_classic(stripe, number_of_strips);
 
-    // Вычисление значений P' и Q', хранятся на месте синдромов
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Р·РЅР°С‡РµРЅРёР№ P' Рё Q', С…СЂР°РЅСЏС‚СЃСЏ РЅР° РјРµСЃС‚Рµ СЃРёРЅРґСЂРѕРјРѕРІ
     for (int i = 0; i < size_of_strip * 2; i++)
     {
         p_p[i] ^= new_syndromes[i];
     }
 
     uint8_t numerator;
-    // Вычисление Db
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Db
     for (int i = 0; i < size_of_strip; i++)
     {
         // Q' * x^(a-N+1)
@@ -163,13 +163,13 @@ void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_st
         p_db[i] = multiply_A_by_B_classic(numerator, first_table[b - a]);
     }
 
-    // Вычисление Da
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Da
     for (int i = 0; i < size_of_strip; i++)
     {
         p_da[i] = p_p[i] ^ p_db[i]; // Da = P' - Db
     }
 
-    // Восстановление синдромов
+    // Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ СЃРёРЅРґСЂРѕРјРѕРІ
     calc_one_stripe_classic(stripe, number_of_strips);
 
     p_da = NULL;
@@ -182,7 +182,7 @@ void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_st
 
 void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
 {
-	// new_syndromes для хранения старых значений P Q
+	// new_syndromes РґР»СЏ С…СЂР°РЅРµРЅРёСЏ СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Q
 	uint8_t* new_syndromes;
 	new_syndromes = (uint8_t*) malloc(size_of_strip * 2 * sizeof(uint8_t));
 	uint8_t* p_da = stripe + a * size_of_strip;
@@ -190,7 +190,7 @@ void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_str
 	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
 	uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-	// Обнуление Da и Db и занесение в new_syndromes старых значений P и Q
+	// РћР±РЅСѓР»РµРЅРёРµ Da Рё Db Рё Р·Р°РЅРµСЃРµРЅРёРµ РІ new_syndromes СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Рё Q
     for (int i = 0; i < size_of_strip; i += 16)
     {
     	vst1q_u8(p_da + i, vmovq_n_u8(0));
@@ -201,15 +201,15 @@ void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_str
 
     calc_one_stripe_vector(stripe, number_of_strips);
 
-    // Вычисление значений P' и Q', хранятся на месте синдромов
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Р·РЅР°С‡РµРЅРёР№ P' Рё Q', С…СЂР°РЅСЏС‚СЃСЏ РЅР° РјРµСЃС‚Рµ СЃРёРЅРґСЂРѕРјРѕРІ
     for (int i = 0; i < size_of_strip * 2; i += 16)
     {
-    	// Q находится непосредственно за P
+    	// Q РЅР°С…РѕРґРёС‚СЃСЏ РЅРµРїРѕСЃСЂРµРґСЃС‚РІРµРЅРЅРѕ Р·Р° P
     	vst1q_u8(p_p + i, veorq_u8(vld1q_u8(p_p + i), vld1q_u8(new_syndromes + i)));
     }
 
     uint8x16_t numerator;
-    // Вычисление Db
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Db
     for (int i = 0; i < size_of_strip; i += 16)
     {
         // Q' * x^(a-N+1)
@@ -220,13 +220,13 @@ void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_str
         vst1q_u8(p_db + i, multiply_A_by_B_vector(numerator, first_table[b - a]));
     }
 
-    // Вычисление Da
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Da
     for (int i = 0; i < size_of_strip; i += 16)
     {
     	vst1q_u8(p_da + i, veorq_u8(vld1q_u8(p_p + i), vld1q_u8(p_db + i))); // Da = P' - Db
     }
 
-    // Восстановление синдромов
+    // Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ СЃРёРЅРґСЂРѕРјРѕРІ
     calc_one_stripe_vector(stripe, number_of_strips);
     p_da = NULL;
     p_db = NULL;
@@ -239,7 +239,7 @@ void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_str
 
 void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
 {
-	// new_syndromes для хранения старых значений P Q
+	// new_syndromes РґР»СЏ С…СЂР°РЅРµРЅРёСЏ СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Q
 	uint8_t* new_syndromes;
 	new_syndromes = (uint8_t*) malloc(size_of_strip * 2 * sizeof(uint8_t));
 	uint8_t* p_da = stripe + a * size_of_strip;
@@ -247,7 +247,7 @@ void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_str
 	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
 	uint8_t* p_q = stripe + (number_of_strips + 1) * size_of_strip;
 
-	// Обнуление Da и Db и занесение в new_syndromes старых значений P и Q
+	// РћР±РЅСѓР»РµРЅРёРµ Da Рё Db Рё Р·Р°РЅРµСЃРµРЅРёРµ РІ new_syndromes СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ P Рё Q
 	for (int i = 0; i < size_of_strip; i += 16)
 	{
 	    vst1q_u8(p_da + i, vmovq_n_u8(0));
@@ -258,10 +258,10 @@ void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_str
 
     calc_one_stripe_RAIDIX(stripe, number_of_strips);
 
-    // Вычисление значений P' и Q', хранятся на месте синдромов
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Р·РЅР°С‡РµРЅРёР№ P' Рё Q', С…СЂР°РЅСЏС‚СЃСЏ РЅР° РјРµСЃС‚Рµ СЃРёРЅРґСЂРѕРјРѕРІ
     for (int i = 0; i < size_of_strip * 2; i += 16)
     {
-    	// Q находится непосредственно за P
+    	// Q РЅР°С…РѕРґРёС‚СЃСЏ РЅРµРїРѕСЃСЂРµРґСЃС‚РІРµРЅРЅРѕ Р·Р° P
         vst1q_u8(p_p + i, veorq_u8(vld1q_u8(p_p + i), vld1q_u8(new_syndromes + i)));
     }
 
@@ -269,7 +269,7 @@ void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_str
     uint8_t* numerator;
     //numerator = (uint8x16_t*) memalign(32, 8 * sizeof(uint8x16_t));
     numerator = (uint8_t*) malloc(8 * 16 * sizeof(uint8_t));
-    // Вычисление Db
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Db
     for (int i = 0; i < size_of_strip / 128; i++)
     {
     	for (int j = 0; j < 8; j++)
@@ -283,13 +283,13 @@ void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_str
         multiply_A_by_B_RAIDIX(numerator, first_table[b - a], p_db + (i * 8) * 16);
     }
 
-    // Вычисление Da
+    // Р’С‹С‡РёСЃР»РµРЅРёРµ Da
     for (int i = 0; i < size_of_strip; i += 16)
     {
         vst1q_u8(p_da + i, veorq_u8(vld1q_u8(p_p + i), vld1q_u8(p_db + i))); // Da = P' - Db
     }
 
-    // Восстановление синдромов
+    // Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ СЃРёРЅРґСЂРѕРјРѕРІ
     calc_one_stripe_RAIDIX(stripe, number_of_strips);
     p_da = NULL;
     p_db = NULL;
