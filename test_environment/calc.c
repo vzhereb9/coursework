@@ -5,10 +5,12 @@ uint64_t calc_classic(uint8_t** raid, unsigned int number_of_strips, unsigned in
     struct timespec time1, time2;
     uint64_t time_ns = 0;
     clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
+
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
         calc_one_stripe_classic(raid[i], number_of_strips);
     }
+
     clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
     time_ns = diff_ns(time1, time2);
     return time_ns;
@@ -34,15 +36,15 @@ uint64_t calc_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsigned
 {
     struct timespec time1, time2;
     uint64_t time_ns = 0;
-
     clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
+
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
         calc_one_stripe_RAIDIX((__m256i*) (raid_new[i]), number_of_strips);
     }
+
     clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
     time_ns = diff_ns(time1, time2);
-
     return time_ns;
 }
 
@@ -113,6 +115,7 @@ void calc_one_stripe_vector(__m256i* const stripe, unsigned int number_of_strips
         _mm256_store_si256(p_q + i % size_of_strip_for_m256i,
                            _mm256_xor_si256(p_q[i % size_of_strip_for_m256i], stripe[(size_of_strip / 32) + i]));
     }
+
     p_q = NULL;
     p_p = NULL;
 }
@@ -139,7 +142,6 @@ void calc_one_stripe_RAIDIX(__m256i* const stripe, unsigned int number_of_strips
     {
         _mm256_store_si256(p_q + i, stripe[i]);
     }
-
     // Вычисление Q
     for (int k = 0; k < size_of_strip / 256; k++)
     {
@@ -154,6 +156,7 @@ void calc_one_stripe_RAIDIX(__m256i* const stripe, unsigned int number_of_strips
             }
         }
     }
+
     p_q = NULL;
     p_p = NULL;
 }

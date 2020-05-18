@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint-gcc.h>
 #include <string.h>
+#include <stdint-gcc.h>
 #include <malloc.h>
 #include <time.h>
 #include <immintrin.h>
