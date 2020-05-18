@@ -6,7 +6,6 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
 
-
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) memalign(16,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
@@ -24,7 +23,9 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
         recover_one_stripe_classic(raid[i], number_of_strips, a, b);
+
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
 
@@ -37,7 +38,6 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
             }
         }
     }
-
     free(stripe_for_check);
     stripe_for_check = NULL;
 
@@ -49,6 +49,7 @@ uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned 
 {
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
+
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) memalign(16, size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
@@ -66,7 +67,9 @@ uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned 
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
         recover_one_stripe_vector((__m128i*) raid[i], number_of_strips, a, b);
+
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
 
@@ -91,6 +94,7 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
 {
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
+
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) (uint8_t*) memalign(16,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
@@ -108,7 +112,9 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
         recover_one_stripe_RAIDIX((__m128i*) raid_new[k], number_of_strips, a, b);
+
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -119,7 +125,6 @@ uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsig
             }
         }
     }
-
     free(stripe_for_check);
     stripe_for_check = NULL;
 

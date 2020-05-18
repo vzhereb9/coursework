@@ -1,10 +1,10 @@
 CC=gcc
-CFLAGS= -msse -msse2 -msse3 -Wall -c
+CFLAGS= -msse -msse2 -msse3 -c
 
 all: coursework_SSE
 
 coursework_SSE: main.o test_env.o calc.o recover.o basic_operators.o table_values.o
-	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -lm -o coursework_SSE
+	$(CC) main.o test_env.o calc.o recover.o basic_operators.o table_values.o -lm -o3 -o coursework_SSE
 
 main.o: main.c 
 	$(CC) $(CFLAGS) main.c
@@ -25,4 +25,4 @@ table_values.o: table_values.c
 	$(CC) $(CFLAGS) table_values.c
 
 clean:
-	rm -rf *.o
+	rm -rf *.o coursework_SSE
