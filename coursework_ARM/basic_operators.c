@@ -7,7 +7,7 @@ uint8_t multiply_by_X_classic(uint8_t a)
 
 uint8x16_t multiply_by_X_vector(uint8x16_t a)
 {
- 	uint8x16_t mask = vcgtq_s8(vmovq_n_u8(0), (int8x16_t)a);
+ 	uint8x16_t mask = vcgtq_s8(vmovq_n_s8(0), (int8x16_t)a);
  	mask = vandq_u8(mask, vmovq_n_u8(GF_2_8_module));
     a = vshlq_n_u8(a, 1);
     a = vandq_u8(a, vmovq_n_u8(0xFE));
@@ -17,7 +17,8 @@ uint8x16_t multiply_by_X_vector(uint8x16_t a)
 
 void multiply_by_X_RAIDIX(uint8_t* a)
 {
-    for (int i = 0; i < 7; i++)
+	uint8x16_t 
+	for (int i = 0; i < 7; i++)
     {
     	vst1q_u8(a + i * 16, veorq_u8(vld1q_u8(a + i * 16), vld1q_u8(a + (i + 1) * 16)));
     	vst1q_u8(a + (i + 1) * 16, veorq_u8(vld1q_u8(a + (i + 1) * 16), vld1q_u8(a + i * 16)));
@@ -72,6 +73,23 @@ void multiply_A_by_B_RAIDIX(uint8_t* a, uint8_t b, uint8_t* sum)
     }
 }
 
+uint64_t diff_ns(struct timespec start, struct timespec end)
+{
+    struct timespec diff;
+
+    //if number of nanoseconds in end less then in start we should take 1 sec
+    if ((end.tv_nsec - start.tv_nsec) < 0)
+    {
+        diff.tv_sec = end.tv_sec - start.tv_sec - 1;
+        diff.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+    } else
+    {
+        diff.tv_sec = end.tv_sec - start.tv_sec;
+        diff.tv_nsec = end.tv_nsec - start.tv_nsec;
+    }
+
+    return diff.tv_sec * 1000000000 + diff.tv_nsec;
+}
 
 void print_stripe(uint8_t* const stripe, unsigned int number_of_disks)
 {

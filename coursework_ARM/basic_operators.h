@@ -1,7 +1,7 @@
 #ifndef BASIC_OPERATORS_H_
 #define BASIC_OPERATORS_H_
 
-typedef unsigned char uint8_t;
+//typedef unsigned char uint8_t;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +23,9 @@ uint8x16_t multiply_A_by_B_vector(uint8x16_t a, uint8_t b);
 void multiply_by_X_RAIDIX(uint8_t* a);
 
 void multiply_A_by_B_RAIDIX(uint8_t* a, uint8_t b, uint8_t* sum);
+
+//return difference in ns
+uint64_t diff_ns(struct timespec start, struct timespec end);
 
 void print_stripe(uint8_t* const stripe, unsigned int number_of_strips);
 

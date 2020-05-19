@@ -1,37 +1,52 @@
 #include "calc.h"
 
-clock_t calc_classic(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
+uint64_t calc_classic(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
 {
-	clock_t time_calc = clock();
+	struct timespec time1, time2;
+	uint64_t time_ns = 0;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
+
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
         calc_one_stripe_classic(raid[i], number_of_strips);
     }
-    return clock() - time_calc;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
+    time_ns = diff_ns(time1, time2);
+    return time_ns;
 }
 
 
-clock_t calc_vector(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
+uint64_t calc_vector(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
 {
-    clock_t time_calc = clock();
+    struct timespec time1, time2;
+    uint64_t time_ns = 0;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
 
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
         calc_one_stripe_vector(raid[i], number_of_strips);
     }
-    return clock() - time_calc;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
+    time_ns = diff_ns(time1, time2);
+    return time_ns;
 }
 
-clock_t calc_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
+uint64_t calc_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes)
 {
-	clock_t time_calc = clock();
+	struct timespec time1, time2;
+	uint64_t time_ns = 0;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
 
 	for (unsigned int i = 0; i < number_of_stripes; i++)
 	{
 		calc_one_stripe_RAIDIX(raid[i], number_of_strips);
 	}
 
-	return clock() - time_calc;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
+	time_ns = diff_ns(time1, time2);
+	return time_ns;
 }
 
 void calc_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips)
@@ -99,6 +114,7 @@ void calc_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_strips
     	// Прибаление к текущей ячейке Q значение соотвествующей ячейки блока D(i+1)
     	vst1q_u8(p_q + (i % size_of_strip), veorq_u8(vld1q_u8(p_q + (i % size_of_strip)), vld1q_u8(stripe + size_of_strip + i)));
     }
+
     p_q = NULL;
     p_p = NULL;
 }
@@ -136,6 +152,7 @@ void calc_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_strips
             }
         }
     }
+
     p_q = NULL;
     p_p = NULL;
 }

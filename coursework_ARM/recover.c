@@ -1,9 +1,10 @@
 #include "recover.h"
 
-clock_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
                          unsigned int a, unsigned int b)
 {
-	clock_t time_recover = 0, time_recover_one_stripe;
+	struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+	uint64_t time_recover = 0;
 
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) malloc(size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
@@ -22,11 +23,14 @@ clock_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned 
         }
 
 
-        time_recover_one_stripe = clock();
-        recover_one_stripe_classic(raid[i], number_of_strips, a, b);
-        time_recover += clock() - time_recover_one_stripe;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
 
-        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        recover_one_stripe_classic(raid[i], number_of_strips, a, b);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+       // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
             if (stripe_for_check[j] != raid[i][j])
@@ -42,10 +46,11 @@ clock_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned 
     return time_recover;
 }
 
-clock_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
                         unsigned int a, unsigned int b)
 {
-	clock_t time_recover = 0, time_recover_one_stripe;
+	struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+	uint64_t time_recover = 0;
 
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) malloc(size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
@@ -63,9 +68,12 @@ clock_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned i
             (raid[i])[b * size_of_strip + j] = 0;
         }
 
-        time_recover_one_stripe = clock();
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
         recover_one_stripe_vector(raid[i], number_of_strips, a, b);
-        time_recover += clock() - time_recover_one_stripe;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
 
         // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -83,10 +91,11 @@ clock_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned i
     return time_recover;
 }
 
-clock_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+uint64_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
                         unsigned int a, unsigned int b)
 {
-	clock_t time_recover = 0, time_recover_one_stripe;
+	struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+	uint64_t time_recover = 0;
 
     uint8_t* stripe_for_check = NULL;
     stripe_for_check = (uint8_t*) malloc(size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
@@ -104,9 +113,12 @@ clock_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned i
             (raid[i])[b * size_of_strip + j] = 0;
         }
 
-        time_recover_one_stripe = clock();
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
         recover_one_stripe_RAIDIX(raid[i], number_of_strips, a, b);
-        time_recover += clock() - time_recover_one_stripe;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
 
         // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -228,6 +240,7 @@ void recover_one_stripe_vector(uint8_t* const stripe, unsigned int number_of_str
 
     // Восстановление синдромов
     calc_one_stripe_vector(stripe, number_of_strips);
+
     p_da = NULL;
     p_db = NULL;
     p_p = NULL;
@@ -291,6 +304,7 @@ void recover_one_stripe_RAIDIX(uint8_t* const stripe, unsigned int number_of_str
 
     // Восстановление синдромов
     calc_one_stripe_RAIDIX(stripe, number_of_strips);
+
     p_da = NULL;
     p_db = NULL;
     p_p = NULL;

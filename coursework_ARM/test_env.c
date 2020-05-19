@@ -1,9 +1,7 @@
 #include "test_env.h"
 
-// функция сравнения элементов массива
 int compare_double(const void* x1, const void* x2)
 {
-    // если результат вычитания равен 0, то числа равны, < 0: x1 < x2; > 0: x1 > x2
     return (*(double*) x1 - *(double*) x2);
 }
 
@@ -58,7 +56,7 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
 void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], unsigned int flag)
 {
     // число экспериментов, для которых запускаем тест.
-    const unsigned int number_of_experiments = 10; // 1024
+    const unsigned int number_of_experiments = 1000; // 1000
     // массив скоростей обработки данных для каждого количества дисков (4, 8, ... , 64)
     double speed_calc_for_each_number_of_drives[number_of_experiments];
     double speed_recover_for_each_number_of_drives[number_of_experiments];
@@ -74,10 +72,10 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
         }
 
 
-       for (int l = 0; l < number_of_experiments; l++)
+        for (int l = 0; l < number_of_experiments; l++)
         {
-        	double time_calc = 0.0;
-        	double time_recover = 0.0;
+        	uint64_t time_calc = 0;
+        	uint64_t time_recover = 0;
 
             for (int i = 0; i < number_of_stripes; i++)
             {
@@ -91,33 +89,32 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
             {
                 case 0:
                 {
-                    time_calc = ((double)calc_classic(raid, number_of_strips, number_of_stripes)) / CLOCKS_PER_SEC;
+                	time_calc = calc_classic(raid, number_of_strips, number_of_stripes);
 
                     int b = rand() % (number_of_strips - 1) + 1;
                     int a = rand() % b;
 
-                    time_recover = ((double)recover_classic(raid, number_of_strips, number_of_stripes, a, b)) / CLOCKS_PER_SEC;
+                    time_recover = recover_classic(raid, number_of_strips, number_of_stripes, a, b);
                     break;
                 }
                 case 1:
                 {
-                	time_calc = ((double)calc_vector(raid, number_of_strips, number_of_stripes)) / (double)CLOCKS_PER_SEC;
+                	time_calc = calc_vector(raid, number_of_strips, number_of_stripes);
 
                 	unsigned int b = rand() % (number_of_strips - 1) + 1;
                 	unsigned int a = rand() % b;
 
-                	time_recover = ((double)recover_vector(raid, number_of_strips, number_of_stripes, a, b)) / (double)CLOCKS_PER_SEC;
+                	time_recover = recover_vector(raid, number_of_strips, number_of_stripes, a, b);
                 	break;
                 }
                 case 2:
                 {
-                	time_calc = ((double)calc_RAIDIX(raid, number_of_strips, number_of_stripes)) / CLOCKS_PER_SEC;
+                	time_calc = calc_RAIDIX(raid, number_of_strips, number_of_stripes);
 
                     unsigned int b = rand() % (number_of_strips - 1) + 1;
                     unsigned int a = rand() % b;
 
-                    // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
-                    time_recover = ((double)recover_RAIDIX(raid, number_of_strips, number_of_stripes, a, b)) / CLOCKS_PER_SEC;
+                    time_recover = recover_RAIDIX(raid, number_of_strips, number_of_stripes, a, b);
                     break;
                 }
                 default:
@@ -127,10 +124,8 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
                 }
             }
 
-            speed_calc_for_each_number_of_drives[l] = time_calc;
-            speed_recover_for_each_number_of_drives[l] = time_recover;
-            //speed_calc_for_each_number_of_drives[l] = ((size_of_strip * number_of_strips * number_of_stripes) / (1024.0)) / (time_calc);
-            //speed_recover_for_each_number_of_drives[l] = ((size_of_strip * number_of_strips * number_of_stripes) / (1024.0)) / (time_recover);
+            speed_calc_for_each_number_of_drives[l] = ((size_of_strip / (1024.0 * 1024.0)) * number_of_strips * number_of_stripes) / ((double)time_calc / 1000000000.0);
+            speed_recover_for_each_number_of_drives[l] = ((size_of_strip / (1024.0 * 1024.0)) * number_of_strips * number_of_stripes) / ((double)time_recover / 1000000000.0);
         }
 
         for (int i = 0; i < number_of_stripes; i++)
@@ -139,9 +134,7 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover[16], un
         }
         free(raid);
 
-        avg_speed_calc[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
-                                                                         speed_calc_for_each_number_of_drives);
-        avg_speed_recover[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
-                                                                            speed_recover_for_each_number_of_drives);
+        avg_speed_calc[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments, speed_calc_for_each_number_of_drives);
+        avg_speed_recover[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments, speed_recover_for_each_number_of_drives);
     }
 }
