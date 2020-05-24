@@ -20,14 +20,12 @@ __m128i multiply_by_X_vector(__m128i a)
 
 void multiply_by_X_RAIDIX(__m128i* a)
 {
-	__m128i temp1, temp2;
 	for (int i = 0; i < 7; i++)
     {
         _mm_store_si128(a + i, _mm_xor_si128(a[i], a[i + 1]));
         _mm_store_si128(a + i + 1, _mm_xor_si128(a[i + 1], a[i]));
         _mm_store_si128(a + i, _mm_xor_si128(a[i], a[i + 1]));
     }
-	temp1 = a[7];
     _mm_store_si128(a + 1, _mm_xor_si128(a[1], temp1));
     _mm_store_si128(a + 2, _mm_xor_si128(a[2], temp1));
     _mm_store_si128(a + 3, _mm_xor_si128(a[3], temp1));
