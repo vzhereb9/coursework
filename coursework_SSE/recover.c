@@ -1,13 +1,10 @@
 #include "recover.h"
 
 uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
-                         unsigned int a, unsigned int b)
+                         unsigned int a, unsigned int b, uint8_t* stripe_for_check, uint8_t* new_syndromes)
 {
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
-
-    uint8_t* stripe_for_check = NULL;
-    stripe_for_check = (uint8_t*) memalign(16,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
@@ -24,10 +21,13 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
 
-        recover_one_stripe_classic(raid[i], number_of_strips, a, b);
+        recover_one_stripe_classic(raid[i], number_of_strips, a, b, new_syndromes);
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_classic(raid[i], number_of_strips);
 
         // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -38,20 +38,15 @@ uint64_t recover_classic(uint8_t** raid, unsigned int number_of_strips, unsigned
             }
         }
     }
-    free(stripe_for_check);
-    stripe_for_check = NULL;
 
     return time_recover;
 }
 
 uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
-                        unsigned int a, unsigned int b)
+                        unsigned int a, unsigned int b, uint8_t* stripe_for_check, uint8_t* new_syndromes)
 {
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
-
-    uint8_t* stripe_for_check = NULL;
-    stripe_for_check = (uint8_t*) memalign(16, size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
     for (unsigned int i = 0; i < number_of_stripes; i++)
     {
@@ -68,10 +63,13 @@ uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned 
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
 
-        recover_one_stripe_vector((__m128i*) raid[i], number_of_strips, a, b);
+        recover_one_stripe_vector((__m128i*) raid[i], number_of_strips, a, b, (__m128i*)new_syndromes);
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_vector((__m128i*)raid[i], number_of_strips);
 
         // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
@@ -83,59 +81,226 @@ uint64_t recover_vector(uint8_t** raid, unsigned int number_of_strips, unsigned 
             }
         }
     }
-    free(stripe_for_check);
-    stripe_for_check = NULL;
 
     return time_recover;
 }
 
-uint64_t recover_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsigned int number_of_stripes,
-                        unsigned int a, unsigned int b)
+uint64_t recover_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+                        unsigned int a, unsigned int b, uint8_t* stripe_for_check, uint8_t* new_syndromes, uint8_t* numerator)
 {
     struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
     uint64_t time_recover = 0;
 
-    uint8_t* stripe_for_check = NULL;
-    stripe_for_check = (uint8_t*) (uint8_t*) memalign(16,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
-
-    for (unsigned int k = 0; k < number_of_stripes; k++)
+    for (unsigned int i = 0; i < number_of_stripes; i++)
     {
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
-            stripe_for_check[j] = raid_new[k][j];
+            stripe_for_check[j] = raid[i][j];
         }
 
         for (unsigned int j = 0; j < size_of_strip; j++)
         {
-            (raid_new[k])[a * size_of_strip + j] = 0x0;
-            (raid_new[k])[b * size_of_strip + j] = 0x0;
+            (raid[i])[a * size_of_strip + j] = 0x0;
+            (raid[i])[b * size_of_strip + j] = 0x0;
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
 
-        recover_one_stripe_RAIDIX((__m128i*) raid_new[k], number_of_strips, a, b);
+        recover_one_stripe_RAIDIX((__m128i*) raid[i], number_of_strips, a, b, (__m128i*)new_syndromes, (__m128i*)numerator);
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
         time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_RAIDIX((__m128i*)raid[i], number_of_strips);
+
         for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
         {
-            if (stripe_for_check[j] != raid_new[k][j])
+            if (stripe_for_check[j] != raid[i][j])
             {
                 printf("Recovery function does not work properly\n");
             }
         }
     }
-    free(stripe_for_check);
-    stripe_for_check = NULL;
 
     return time_recover;
 }
 
-void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
+
+uint64_t recover_classic_one_drive(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+                         unsigned int a, uint8_t* stripe_for_check, uint8_t* new_syndromes)
 {
-    uint8_t* new_syndromes;
-    // new_syndromes для хранения старых значений P Q
-    new_syndromes = (uint8_t*) malloc(size_of_strip * 2 * sizeof(uint8_t));
+    struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+    uint64_t time_recover = 0;
+
+    for (unsigned int i = 0; i < number_of_stripes; i++)
+    {
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            stripe_for_check[j] = raid[i][j];
+        }
+
+        for (unsigned int j = 0; j < size_of_strip; j++)
+        {
+            (raid[i])[a * size_of_strip + j] = 0;
+        }
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
+        recover_one_stripe_classic_one_drive(raid[i], number_of_strips, a, new_syndromes);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_classic(raid[i], number_of_strips);
+
+        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            if (stripe_for_check[j] != raid[i][j])
+            {
+                printf("Recovery function does not work properly\n");
+            }
+        }
+    }
+
+    return time_recover;
+}
+
+uint64_t recover_vector_one_drive(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+                         unsigned int a, uint8_t* stripe_for_check, uint8_t* new_syndromes)
+{
+    struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+    uint64_t time_recover = 0;
+
+    for (unsigned int i = 0; i < number_of_stripes; i++)
+    {
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            stripe_for_check[j] = raid[i][j];
+        }
+
+        for (unsigned int j = 0; j < size_of_strip; j++)
+        {
+            (raid[i])[a * size_of_strip + j] = 0;
+        }
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
+        recover_one_stripe_vector_and_RAIDIX_one_drive((__m128i*)raid[i], number_of_strips, a, (__m128i*)new_syndromes);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_vector((__m128i*)raid[i], number_of_strips);
+
+        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            if (stripe_for_check[j] != raid[i][j])
+            {
+                printf("Recovery function does not work properly\n");
+            }
+        }
+    }
+
+    return time_recover;
+}
+
+uint64_t recover_RAIDIX_one_drive(uint8_t** raid, unsigned int number_of_strips, unsigned int number_of_stripes,
+                         unsigned int a, uint8_t* stripe_for_check, uint8_t* new_syndromes)
+{
+    struct timespec time_recover_one_stripe1, time_recover_one_stripe2;
+    uint64_t time_recover = 0;
+
+    for (unsigned int i = 0; i < number_of_stripes; i++)
+    {
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            stripe_for_check[j] = raid[i][j];
+        }
+
+        for (unsigned int j = 0; j < size_of_strip; j++)
+        {
+            (raid[i])[a * size_of_strip + j] = 0;
+        }
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe1);
+
+        recover_one_stripe_vector_and_RAIDIX_one_drive((__m128i*)raid[i], number_of_strips, a, (__m128i*)new_syndromes);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time_recover_one_stripe2);
+        time_recover += diff_ns(time_recover_one_stripe1, time_recover_one_stripe2);
+
+		// Восстановление синдромов
+    	calc_one_stripe_RAIDIX((__m128i*)raid[i], number_of_strips);
+
+        // Проверка правильности работы программы (сравнение страйпов до и после вызова функции)
+        for (unsigned int j = 0; j < size_of_strip * (number_of_strips + 2); j++)
+        {
+            if (stripe_for_check[j] != raid[i][j])
+            {
+                printf("Recovery function does not work properly\n");
+            }
+        }
+    }
+
+    return time_recover;
+}
+
+
+void recover_one_stripe_classic_one_drive(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, uint8_t* const new_syndromes)
+{
+    uint8_t* p_da = stripe + a * size_of_strip;
+    uint8_t* p_p = stripe + number_of_strips * size_of_strip;
+
+    // Обнуление Da и занесение в new_syndromes старых значений P
+    for (int i = 0; i < size_of_strip; i++)
+    {
+        p_da[i] ^= p_da[i];
+        new_syndromes[i] = p_p[i];
+    }
+
+    calc_one_stripe_classic_one_drive(stripe, number_of_strips);
+
+    // Вычисление Da
+    for (int i = 0; i < size_of_strip; i++)
+    {
+        p_da[i] = p_p[i] ^ new_syndromes[i]; // Da = P'
+    }
+
+    p_da = NULL;
+    p_p = NULL;
+}
+
+void recover_one_stripe_vector_and_RAIDIX_one_drive(__m128i* const stripe, unsigned int number_of_strips, unsigned int a, __m128i* const new_syndromes)
+{
+    __m128i* p_da = stripe + a * size_of_strip_for_m128i;
+    __m128i* p_p = stripe + number_of_strips * size_of_strip_for_m128i;
+
+    // Обнуление Da и занесение в new_syndromes старых значений P
+    for (int i = 0; i < size_of_strip_for_m128i; i++)
+    {
+        p_da[i] = _mm_setzero_si128();
+        _mm_store_si128((new_syndromes + i), p_p[i]);
+    }
+
+    calc_one_stripe_vector_and_RAIDIX_one_drive(stripe, number_of_strips);
+
+    // Вычисление Da
+    for (int i = 0; i < size_of_strip_for_m128i; i++)
+    {
+        _mm_store_si128((p_da + i), _mm_xor_si128(p_p[i], new_syndromes[i])); // Da = P'
+    }
+
+    p_da = NULL;
+    p_p = NULL;
+}
+
+void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b, uint8_t* const new_syndromes)
+{
     uint8_t* p_da = stripe + a * size_of_strip;
     uint8_t* p_db = stripe + b * size_of_strip;
     uint8_t* p_p = stripe + number_of_strips * size_of_strip;
@@ -177,22 +342,14 @@ void recover_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_st
         p_da[i] = p_p[i] ^ p_db[i]; // Da = P' - Db
     }
 
-    // Восстановление синдромов
-    calc_one_stripe_classic(stripe, number_of_strips);
-
     p_da = NULL;
     p_db = NULL;
     p_p = NULL;
     p_q = NULL;
-    free(new_syndromes);
-    new_syndromes = NULL;
 }
 
-void recover_one_stripe_vector(__m128i* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
+void recover_one_stripe_vector(__m128i* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b, __m128i* const new_syndromes)
 {
-    __m128i* new_syndromes;
-    // new_syndromes для хранения старых значений P Q
-    new_syndromes = (__m128i*) memalign(16, size_of_strip_for_m128i * 2 * sizeof(__m128i));
     __m128i* p_da = stripe + a * size_of_strip_for_m128i;
     __m128i* p_db = stripe + b * size_of_strip_for_m128i;
     __m128i* p_p = stripe + number_of_strips * size_of_strip_for_m128i;
@@ -234,21 +391,14 @@ void recover_one_stripe_vector(__m128i* const stripe, unsigned int number_of_str
         p_da[i] = _mm_xor_si128(p_p[i], p_db[i]); // Da = P' - Db
     }
 
-    // Восстановление синдромов
-    calc_one_stripe_vector(stripe, number_of_strips);
     p_da = NULL;
     p_db = NULL;
     p_p = NULL;
     p_q = NULL;
-    free(new_syndromes);
-    new_syndromes = NULL;
 }
 
-void recover_one_stripe_RAIDIX(__m128i* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b)
+void recover_one_stripe_RAIDIX(__m128i* const stripe, unsigned int number_of_strips, unsigned int a, unsigned int b, __m128i* const new_syndromes, __m128i* const numerator)
 {
-    __m128i* new_syndromes;
-    // new_syndromes для хранения старых значений P Q
-    new_syndromes = (__m128i*) memalign(16, size_of_strip_for_m128i * 2 * sizeof(__m128i));
     __m128i* p_da = stripe + a * size_of_strip_for_m128i;
     __m128i* p_db = stripe + b * size_of_strip_for_m128i;
     __m128i* p_p = stripe + number_of_strips * size_of_strip_for_m128i;
@@ -272,8 +422,6 @@ void recover_one_stripe_RAIDIX(__m128i* const stripe, unsigned int number_of_str
         _mm_store_si128((p_p + i), _mm_xor_si128(p_p[i], new_syndromes[i]));
     }
 
-    __m128i* numerator;
-    numerator = (__m128i*) memalign(16, 8 * sizeof(__m128i));
     // Вычисление Db
     for (int i = 0; i < size_of_strip / 128; i++)
     {
@@ -294,14 +442,8 @@ void recover_one_stripe_RAIDIX(__m128i* const stripe, unsigned int number_of_str
         p_da[i] = _mm_xor_si128(p_p[i], p_db[i]); // Da = P' - Db
     }
 
-    // Восстановление синдромов
-    calc_one_stripe_RAIDIX(stripe, number_of_strips);
     p_da = NULL;
     p_db = NULL;
     p_p = NULL;
     p_q = NULL;
-    free(new_syndromes);
-    new_syndromes = NULL;
-    free(numerator);
-    numerator = NULL;
 }

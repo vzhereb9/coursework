@@ -48,6 +48,45 @@ uint64_t calc_RAIDIX(uint8_t** raid_new, unsigned int number_of_strips, unsigned
     return time_ns;
 }
 
+
+void calc_one_stripe_classic_one_drive(uint8_t* const stripe, unsigned int number_of_strips)
+{
+	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
+
+	// Обнуление P
+    for (unsigned int i = 0; i < size_of_strip; i++)
+    {
+        p_p[i] ^= p_p[i];
+    }
+	// Вычисление P
+    for (unsigned int i = 0; i < number_of_strips * size_of_strip; i++)
+    {
+        p_p[i % size_of_strip] ^= stripe[i];
+    }
+
+	p_p = NULL;
+}
+
+void calc_one_stripe_vector_and_RAIDIX_one_drive(__m128i* const stripe, unsigned int number_of_strips)
+{
+	__m128i* p_p = stripe + number_of_strips * size_of_strip_for_m128i;
+
+	// Обнуление P
+    for (unsigned int i = 0; i < size_of_strip_for_m128i; i++)
+    {
+        _mm_store_si128(p_p + i, _mm_setzero_si128());
+    }
+    // Вычисление P
+    for (unsigned int i = 0; i < number_of_strips * size_of_strip_for_m128i; i++)
+    {
+        _mm_store_si128(p_p + i % size_of_strip_for_m128i,
+                        _mm_xor_si128(p_p[i % size_of_strip_for_m128i], stripe[i]));
+    }
+
+	p_p = NULL;
+}
+
+
 void calc_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips)
 {
     uint8_t* p_p = stripe + number_of_strips * size_of_strip;
