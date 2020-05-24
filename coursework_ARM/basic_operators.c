@@ -17,7 +17,6 @@ uint8x16_t multiply_by_X_vector(uint8x16_t a)
 
 void multiply_by_X_RAIDIX(uint8_t* a)
 {
-	uint8x16_t 
 	for (int i = 0; i < 7; i++)
     {
     	vst1q_u8(a + i * 16, veorq_u8(vld1q_u8(a + i * 16), vld1q_u8(a + (i + 1) * 16)));

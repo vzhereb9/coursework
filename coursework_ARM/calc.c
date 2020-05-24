@@ -49,6 +49,45 @@ uint64_t calc_RAIDIX(uint8_t** raid, unsigned int number_of_strips, unsigned int
 	return time_ns;
 }
 
+
+void calc_one_stripe_classic_one_drive(uint8_t* const stripe, unsigned int number_of_strips)
+{
+	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
+
+	// Обнуление P
+    for (unsigned int i = 0; i < size_of_strip; i++)
+    {
+        p_p[i] ^= p_p[i];
+    }
+	// Вычисление P
+    for (unsigned int i = 0; i < number_of_strips * size_of_strip; i++)
+    {
+        p_p[i % size_of_strip] ^= stripe[i];
+    }
+
+	p_p = NULL;
+}
+
+
+void calc_one_stripe_vector_and_RAIDIX_one_drive(uint8_t* const stripe, unsigned int number_of_strips)
+{
+	uint8_t* p_p = stripe + number_of_strips * size_of_strip;
+	
+	// Обнуление P
+	for (unsigned int i = 0; i < size_of_strip; i += 16)
+	{
+		vst1q_u8(p_p + i, vmovq_n_u8(0));
+	}
+    // Вычисление P
+    for (unsigned int i = 0; i < number_of_strips * size_of_strip; i += 16)
+    {
+    	vst1q_u8(p_p + (i % size_of_strip), veorq_u8(vld1q_u8(p_p + (i % size_of_strip)), vld1q_u8(stripe + i)));
+    }
+
+    p_p = NULL;
+}
+
+
 void calc_one_stripe_classic(uint8_t* const stripe, unsigned int number_of_strips)
 {
     uint8_t* p_p = stripe + number_of_strips * size_of_strip;
