@@ -26,9 +26,9 @@ void multiply_by_X_RAIDIX(__m128i* a)
         _mm_store_si128(a + i + 1, _mm_xor_si128(a[i + 1], a[i]));
         _mm_store_si128(a + i, _mm_xor_si128(a[i], a[i + 1]));
     }
-    _mm_store_si128(a + 1, _mm_xor_si128(a[1], temp1));
-    _mm_store_si128(a + 2, _mm_xor_si128(a[2], temp1));
-    _mm_store_si128(a + 3, _mm_xor_si128(a[3], temp1));
+    _mm_store_si128(a + 1, _mm_xor_si128(a[1], a[7]));
+    _mm_store_si128(a + 2, _mm_xor_si128(a[2], a[7]));
+    _mm_store_si128(a + 3, _mm_xor_si128(a[3], a[7]));
 }
 
 uint8_t multiply_A_by_B_classic(uint8_t a, uint8_t b)
