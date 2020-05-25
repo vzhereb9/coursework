@@ -85,7 +85,7 @@ void find_avg_speeds(double avg_speed_calc[16][3], double avg_speed_recover_one_
 
 			uint8_t* new_syndromes;
     		// new_syndromes для хранения старых значений P Q
-    		new_syndromes = (uint8_t*) malloc(size_of_strip * 2 * sizeof(uint8_t));
+    		new_syndromes = (uint8_t*) memalign(16, size_of_strip * 2 * sizeof(uint8_t));
 			uint8_t* stripe_for_check;
    			stripe_for_check = (uint8_t*) memalign(16,size_of_strip * (number_of_strips + 2) * sizeof(uint8_t));
 
