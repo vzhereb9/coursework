@@ -12,8 +12,8 @@ int compare_double(const void* x1, const void* x2);
 
 int bin_search(const unsigned int number_of_experiments, const double speed[number_of_experiments], double key);
 
-double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double * speed);
+void find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double * speed, double * result);
 
-void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_drive[16], double avg_speed_recover[16], unsigned int flag);
+void find_avg_speeds(double avg_speed_calc[16][3], double avg_speed_recover_one_drive[16][3], double avg_speed_recover[16][3], unsigned int flag);
 
 #endif //TESTC_TEST_ENV_H

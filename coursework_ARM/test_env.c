@@ -21,7 +21,7 @@ int bin_search(const unsigned int number_of_experiments, const double speed[numb
     return (int) r;
 }
 
-double find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double* speed)
+void find_avg_speed_confidence_interval(const unsigned int number_of_experiments, double* speed, double* result)
 {
     qsort(speed, number_of_experiments, sizeof(double), compare_double);
 
@@ -41,8 +41,8 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
     double standard_deviation = sqrt(variance);
 
     double avg_speed = 0.0;
-    double confidence_interval_min = med - standard_deviation;
-    double confidence_interval_max = med + standard_deviation;
+    double confidence_interval_min = med - 1.96 * standard_deviation / sqrt(number_of_experiments);
+    double confidence_interval_max = med + 1.96 * standard_deviation / sqrt(number_of_experiments);
 
     int index_confidence_interval_min = bin_search(number_of_experiments, speed, confidence_interval_min);
     int index_confidence_interval_max = bin_search(number_of_experiments, speed, confidence_interval_max);
@@ -50,10 +50,11 @@ double find_avg_speed_confidence_interval(const unsigned int number_of_experimen
     for (int i = index_confidence_interval_min; i < index_confidence_interval_max; i++)
         avg_speed += const_for_avg_speed * speed[i];
 
-    return avg_speed;
+    result[0] = med; result[1] = 1.96 * standard_deviation / sqrt(number_of_experiments); 
+	result[2] = avg_speed;
 }
 
-void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_drive[16], double avg_speed_recover[16], unsigned int flag)
+void find_avg_speeds(double avg_speed_calc[16][3], double avg_speed_recover_one_drive[16][3], double avg_speed_recover[16][3], unsigned int flag)
 {
     // число экспериментов, для которых запускаем тест.
     const unsigned int number_of_experiments = 1000; // 1000
@@ -84,7 +85,9 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_dri
         	uint64_t time_calc = 0;
 			uint64_t time_recover_one_drive = 0;
         	uint64_t time_recover = 0;
-			unsigned int a, b;
+			unsigned int b = rand() % (number_of_strips - 1) + 1;
+			unsigned int a = rand() % b;
+			unsigned int c = rand() % (number_of_strips - 1);
 
             for (int i = 0; i < number_of_stripes; i++)
             {
@@ -101,13 +104,8 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_dri
                     // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
                     time_calc = calc_classic(raid, number_of_strips, number_of_stripes);
 
-					a = rand() % (number_of_strips - 1);
-
 					// восстановление 1 диска и вычисление времени, за которое происходит восстановление
-                    time_recover_one_drive = recover_classic_one_drive(raid, number_of_strips, number_of_stripes, a, stripe_for_check, new_syndromes);
-					
-                    b = rand() % (number_of_strips - 1) + 1;
-                    a = rand() % b;
+                    time_recover_one_drive = recover_classic_one_drive(raid, number_of_strips, number_of_stripes, c, stripe_for_check, new_syndromes);
 
                     // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
                     time_recover = recover_classic(raid, number_of_strips, number_of_stripes, a, b, stripe_for_check, new_syndromes);
@@ -118,13 +116,8 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_dri
                     // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
                     time_calc = calc_vector(raid, number_of_strips, number_of_stripes);
 
-					a = rand() % (number_of_strips - 1);
-
 					// восстановление 1 диска и вычисление времени, за которое происходит восстановление
-                    time_recover_one_drive = recover_vector_one_drive(raid, number_of_strips, number_of_stripes, a, stripe_for_check, new_syndromes);
-
-                    b = rand() % (number_of_strips - 1) + 1;
-                    a = rand() % b;
+                    time_recover_one_drive = recover_vector_one_drive(raid, number_of_strips, number_of_stripes, c, stripe_for_check, new_syndromes);
 
                     // восстановление 2х дисков и вычисление времени, за которое происходит восстановление
                     time_recover = recover_vector(raid, number_of_strips, number_of_stripes, a, b, stripe_for_check, new_syndromes);
@@ -135,13 +128,8 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_dri
                     // подсчет контрольных сумм и вычисление времени, за которое происходит подсчет
                     time_calc = calc_RAIDIX(raid, number_of_strips, number_of_stripes);
 
-					a = rand() % (number_of_strips - 1);
-
 					// восстановление 1 диска и вычисление времени, за которое происходит восстановление
-                    time_recover_one_drive = recover_RAIDIX_one_drive(raid, number_of_strips, number_of_stripes, a, stripe_for_check, new_syndromes);
-
-                    b = rand() % (number_of_strips - 1) + 1;
-                    a = rand() % b;
+                    time_recover_one_drive = recover_RAIDIX_one_drive(raid, number_of_strips, number_of_stripes, c, stripe_for_check, new_syndromes);
 
 					uint8_t* numerator;
     				numerator = (uint8_t*) malloc(8 * 16 * sizeof(uint8_t));
@@ -182,11 +170,8 @@ void find_avg_speeds(double avg_speed_calc[16], double avg_speed_recover_one_dri
 			free(stripe_for_check);
     		stripe_for_check = NULL;
         }
-        avg_speed_calc[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
-                                                                         speed_calc_for_each_number_of_drives);
-		avg_speed_recover_one_drive[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
-                                                                         speed_recover_one_drive_for_each_number_of_drives);
-        avg_speed_recover[(r / 4) - 1] = find_avg_speed_confidence_interval(number_of_experiments,
-                                                                            speed_recover_for_each_number_of_drives);
+        find_avg_speed_confidence_interval(number_of_experiments, speed_calc_for_each_number_of_drives, avg_speed_calc[(r / 4) - 1]);
+		find_avg_speed_confidence_interval(number_of_experiments, speed_recover_one_drive_for_each_number_of_drives, avg_speed_recover_one_drive[(r / 4) - 1]);
+        find_avg_speed_confidence_interval(number_of_experiments, speed_recover_for_each_number_of_drives, avg_speed_recover[(r / 4) - 1]);
     }
 }
